@@ -23,7 +23,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           # 지원되는 Unity 버전으로 수정
-          unityVersion: 2022.3.15f1
+          unityVersion: 2022.3.7f1
 
       - name: Unity - Test runner
         uses: game-ci/unity-test-runner@v4
@@ -33,6 +33,6 @@ jobs:
         with:
           projectPath: .
           # 동일한 버전으로 수정
-          unityVersion: 2022.3.15f1
+          unityVersion: 2022.3.7f1
           testMode: all
           artifactsPath: test-results
