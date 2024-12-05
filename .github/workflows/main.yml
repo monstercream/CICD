@@ -8,22 +8,31 @@ on:
 
 jobs:
   test:
-    name: Run Unity Tests
+    name: Run Tests
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Unity 활성화 단계 추가
+      - name: Cache Library
+        uses: actions/cache@v3
+        with:
+          path: Library
+          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: Library-
+
+      # Unity 라이센스 자동 활성화
       - name: Unity - Activate
+        continue-on-error: true  # 활성화 실패해도 계속 진행
         uses: game-ci/unity-activate@v2
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           unityVersion: 2022.3.7f1
-
-      - name: Run tests
+      
+      # Unity 테스트 실행
+      - name: Run Tests
         uses: game-ci/unity-test-runner@v4
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
@@ -33,3 +42,11 @@ jobs:
           unityVersion: 2022.3.7f1
           testMode: all
           artifactsPath: test-results
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: Test results
+          path: test-results
