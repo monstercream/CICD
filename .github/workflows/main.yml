@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     name: Run Tests
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     container: unityci/editor:2022.3.7f1-linux-il2cpp-1
     steps:
       # Unity 라이센스 자동 활성화
