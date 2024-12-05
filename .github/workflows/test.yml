@@ -1,0 +1,29 @@
+name: test
+
+env:
+  UNITY_VERSION: 2022.3.7f1
+  SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Build & Upload Addressables
+        if: ${{ success() && inputs.ADDRESSABLES_OPTION != 'SKIP' }}
+        shell: pwsh
+        run: |
+          cd iv-build-coordinator
+          dotnet-script Main.csx --stage Addressables --buildconfig ${{ env.CONFIG_BASE64 }}
