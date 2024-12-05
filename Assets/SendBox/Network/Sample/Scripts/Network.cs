@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using PlayFab;
 using PlayFab.ClientModels;
 using UnityEngine;
-using Object = System.Object;
 
 namespace Network
 {
@@ -15,11 +14,11 @@ namespace Network
     {
         public PlayFabError PlayFabError { get; }
 
-        public PlayFabException(PlayFabError error) : base( error.ErrorMessage )
+        public PlayFabException(PlayFabError error) : base(error.ErrorMessage)
         {
             foreach (var errorErrorDetail in error.ErrorDetails)
             {
-                Debug.LogWarning( errorErrorDetail.Value );
+                Debug.LogWarning(errorErrorDetail.Key + ": " + string.Join(", ", errorErrorDetail.Value));
             }
 
             PlayFabError = error;
@@ -28,65 +27,77 @@ namespace Network
 
     public class NetworkResult
     {
-        public bool IsSuccuces;
-        public Object Result;
+        public bool IsSuccess { get; private set; }  // Fixed typo in property name
+        public Dictionary<string, string> TitleResult { get; private set; }
+        public Dictionary<string, UserDataRecord> ReadResult { get; private set; }
 
-        public NetworkResult(bool isSuccuces, Object result)
+        public NetworkResult(bool isSuccess)
         {
-            this.IsSuccuces = isSuccuces;
-            this.Result = result;
+            
+        }
+        
+        public NetworkResult(bool isSuccess, Dictionary<string, string> result)
+        {
+            IsSuccess = isSuccess;
+            TitleResult = result;
+        }
+        
+        public NetworkResult(bool isSuccess, Dictionary<string, UserDataRecord> result)
+        {
+            IsSuccess = isSuccess;
+            ReadResult = result;
         }
     }
 
     public class Network : INetwork
     {
-        public static UserData UserData;
-        private volatile static Int32 _orderNumber_Function = 0;
-
+        public static UserData UserData { get; private set; }
+        private static int _orderNumber_Function;
 
         public async Task<NetworkResult> LoginAsync(string titleID, string loginID)
         {
-            GetPlayerCombinedInfoRequestParams InfoRequestParams = new GetPlayerCombinedInfoRequestParams();
-            InfoRequestParams.GetPlayerProfile = true;
-            InfoRequestParams.GetUserVirtualCurrency = true;
-            InfoRequestParams.GetUserAccountInfo = true;
+            var infoRequestParams = new GetPlayerCombinedInfoRequestParams
+            {
+                GetPlayerProfile = true,
+                GetUserVirtualCurrency = true,
+                GetUserAccountInfo = true
+            };
 
-            Debug.LogWarning( loginID );
+            Debug.LogWarning(loginID);
 
-            LoginResult loginResult = null;
+            LoginResult loginResult;
 
-#if IOS
-            LoginWithIOSDeviceIDRequest request = new LoginWithIOSDeviceIDRequest()
+#if UNITY_IOS
+            var request = new LoginWithIOSDeviceIDRequest
             {
                 TitleId = titleID,
                 DeviceId = loginID,
                 CreateAccount = false,
-                InfoRequestParameters = InfoRequestParams
+                InfoRequestParameters = infoRequestParams
             };
 
             loginResult = await LoginWithIOSDeviceIDAsync(request);
-#elif ANDROID
-            LoginWithAndroidDeviceIDRequest request = new LoginWithAndroidDeviceIDRequest()
+#elif UNITY_ANDROID
+            var request = new LoginWithAndroidDeviceIDRequest
             {
                 TitleId = titleID,
                 AndroidDeviceId = loginID,
                 CreateAccount = false,
-                InfoRequestParameters = InfoRequestParams
+                InfoRequestParameters = infoRequestParams
             };
 
             loginResult = await LoginWithAndroidDeviceIDAsync(request);
 #else
-            LoginWithIOSDeviceIDRequest request = new LoginWithIOSDeviceIDRequest()
+            var request = new LoginWithIOSDeviceIDRequest
             {
                 TitleId = titleID,
                 DeviceId = loginID,
                 CreateAccount = false,
-                InfoRequestParameters = InfoRequestParams
+                InfoRequestParameters = infoRequestParams
             };
 
-            loginResult = await LoginWithIOSDeviceIDAsync( request );
+            loginResult = await LoginWithIOSDeviceIDAsync(request);
 #endif
-            // 성공적인 로그인 처리
 
             UserData = new UserData(
                 loginResult.InfoResultPayload.PlayerProfile.DisplayName,
@@ -95,16 +106,16 @@ namespace Network
                 loginResult.NewlyCreated
             );
 
-            return new NetworkResult( true, request );
+            return new NetworkResult(true, new Dictionary<string, string>());
         }
 
         private Task<LoginResult> LoginWithIOSDeviceIDAsync(LoginWithIOSDeviceIDRequest request)
         {
             var taskCompletionSource = new TaskCompletionSource<LoginResult>();
 
-            PlayFabClientAPI.LoginWithIOSDeviceID( request,
-                result => taskCompletionSource.SetResult( result ),
-                error => taskCompletionSource.SetException( new PlayFabException( error ) ) );
+            PlayFabClientAPI.LoginWithIOSDeviceID(request,
+                result => taskCompletionSource.SetResult(result),
+                error => taskCompletionSource.SetException(new PlayFabException(error)));
 
             return taskCompletionSource.Task;
         }
@@ -113,9 +124,9 @@ namespace Network
         {
             var taskCompletionSource = new TaskCompletionSource<LoginResult>();
 
-            PlayFabClientAPI.LoginWithAndroidDeviceID( request,
-                result => taskCompletionSource.SetResult( result ),
-                error => taskCompletionSource.SetException( new PlayFabException( error ) ) );
+            PlayFabClientAPI.LoginWithAndroidDeviceID(request,
+                result => taskCompletionSource.SetResult(result),
+                error => taskCompletionSource.SetException(new PlayFabException(error)));
 
             return taskCompletionSource.Task;
         }
@@ -130,106 +141,121 @@ namespace Network
                 GeneratePlayStreamEvent = true,
                 RevisionSelection = CloudScriptRevisionOption.Latest
 #else
-            RevisionSelection = CloudScriptRevisionOption.Live
+                RevisionSelection = CloudScriptRevisionOption.Live
 #endif
             };
 
-            uint orderNumber = (uint)Interlocked.Increment( ref _orderNumber_Function );
-            string argsStr = GetParameterString( functionParameter );
-            Debug.Log(
-                $"<size=15><color=#00ff00ff>Req>> [{orderNumber}] </color></size><b>{functionName}</b>\n{argsStr}" );
+            uint orderNumber = (uint)Interlocked.Increment(ref _orderNumber_Function);
+            string argsStr = GetParameterString(functionParameter);
+            Debug.Log($"<size=15><color=#00ff00ff>Req>> [{orderNumber}] </color></size><b>{functionName}</b>\n{argsStr}");
 
             try
             {
-                var result = await ExecuteCloudScriptAsync( request );
+                var result = await ExecuteCloudScriptAsync(request);
 
                 foreach (var log in result.Logs)
                 {
-                    Debug.Log(
-                        $"<size=15><color=#1200ffff>Log<< [{orderNumber}] </color></size><b>{functionName}</b>\n{log.Message}" );
+                    Debug.Log($"<size=15><color=#1200ffff>Log<< [{orderNumber}] </color></size><b>{functionName}</b>\n{log.Message}");
                 }
 
-                return new NetworkResult( true, result.FunctionResult.ToString() );
+                var functionResult = result.FunctionResult as Dictionary<string, string>;
+                return new NetworkResult(true, functionResult);
             }
-            catch( Exception ex )
+            catch (Exception ex)
             {
-                Debug.LogError(
-                    $"<size=15><color=#ff0000ff>Err<< [{orderNumber}] </color></size><b>{functionName}</b>\n{ex.Message}\n{ex.StackTrace}" );
-                return new NetworkResult( false, null );
+                Debug.LogError($"<size=15><color=#ff0000ff>Err<< [{orderNumber}] </color></size><b>{functionName}</b>\n{ex.Message}\n{ex.StackTrace}");
+                return new NetworkResult(false);
             }
         }
 
         public async Task<NetworkResult> UserDataRequestAsync(string[] keys = null)
         {
-            UInt32 orderNumber = unchecked((UInt32)Interlocked.Increment( ref _orderNumber_Function ));
-            Debug.Log( $"<size=15><color=#00ff00ff>Req>> [{orderNumber}] </color></size><b>{"GetTitleData"}</b>\n{""}" );
-            var tcs = new TaskCompletionSource<GetTitleDataResult>();
-            GetUserDataResult result;
+            uint orderNumber = unchecked((uint)Interlocked.Increment(ref _orderNumber_Function));
+            Debug.Log($"<size=15><color=#00ff00ff>Req>> [{orderNumber}] </color></size><b>{"GetUserData"}</b>");
 
-            var data = new GetUserDataRequest()
+            try
             {
-                Keys = keys == null ? null : keys.ToList()
+                var result = await GetUserDataAsync(keys);
+                Debug.Log($"<size=15><color=#ffa500ff>Res<< [{orderNumber}] </color></size><b>{"GetUserReadOnlyData"}</b>\n{result}");
+                return new NetworkResult(true, result.Data);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"<size=15><color=#ff0000ff>Err<< [{orderNumber}] </color></size>\n{ex.Message}");
+                return new NetworkResult(false);
+            }
+        }
+
+        private Task<GetUserDataResult> GetUserDataAsync(string[] keys)
+        {
+            var taskCompletionSource = new TaskCompletionSource<GetUserDataResult>();
+            var request = new GetUserDataRequest
+            {
+                Keys = keys?.ToList()
             };
 
-            PlayFabClientAPI.GetUserReadOnlyData( data, res =>
-                {
-                    result = res;
-                    Debug.Log( $"<size=15><color=#ffa500ff>Res<< [{orderNumber}] </color></size><b>{"GetUserReadOnlyData"}</b>\n{res}" );
-                },
-                (error) => { tcs.SetException( new Exception( "An error occurred" + error ) ); } );
+            PlayFabClientAPI.GetUserReadOnlyData(request,
+                result => taskCompletionSource.SetResult(result),
+                error => taskCompletionSource.SetException(new PlayFabException(error)));
 
-            return new NetworkResult( true, result );
+            return taskCompletionSource.Task;
         }
 
         public async Task<NetworkResult> TitleDataRequestAsync(string[] keys = null)
         {
-            UInt32 orderNumber = unchecked((UInt32)Interlocked.Increment( ref _orderNumber_Function ));
-            Debug.Log( $"<size=15><color=#00ff00ff>Req>> [{orderNumber}] </color></size><b>{"GetTitleData"}</b>\n{""}" );
-            var tcs = new TaskCompletionSource<GetTitleDataResult>();
-            GetTitleDataResult result;
+            uint orderNumber = unchecked((uint)Interlocked.Increment(ref _orderNumber_Function));
+            Debug.Log($"<size=15><color=#00ff00ff>Req>> [{orderNumber}] </color></size><b>{"GetTitleData"}</b>");
 
-            var data = new GetTitleDataRequest()
+            try
             {
-                Keys = keys == null ? null : keys.ToList()
+                var result = await GetTitleDataAsync(keys);
+                Debug.Log($"<size=15><color=#ffa500ff>Res<< [{orderNumber}] </color></size><b>{"GetTitleData"}</b>\n{result}");
+                return new NetworkResult(true, result.Data);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"<size=15><color=#ff0000ff>Err<< [{orderNumber}] </color></size>\n{ex.Message}");
+                return new NetworkResult(false);
+            }
+        }
+
+        private Task<GetTitleDataResult> GetTitleDataAsync(string[] keys)
+        {
+            var taskCompletionSource = new TaskCompletionSource<GetTitleDataResult>();
+            var request = new GetTitleDataRequest
+            {
+                Keys = keys?.ToList()
             };
 
-            PlayFabClientAPI.GetTitleData( data, res =>
-                {
-                    result = res;
-                    Debug.Log(
-                        $"<size=15><color=#ffa500ff>Res<< [{orderNumber}] </color></size><b>{"GetUserReadOnlyData"}</b>\n{res}" );
-                    tcs.SetResult( res );
-                },
-                (error) => { tcs.SetException( new Exception( "An error occurred" + error ) ); } );
+            PlayFabClientAPI.GetTitleData(request,
+                result => taskCompletionSource.SetResult(result),
+                error => taskCompletionSource.SetException(new PlayFabException(error)));
 
-            return new NetworkResult( true, result );
+            return taskCompletionSource.Task;
         }
 
         private Task<ExecuteCloudScriptResult> ExecuteCloudScriptAsync(ExecuteCloudScriptRequest request)
         {
             var taskCompletionSource = new TaskCompletionSource<ExecuteCloudScriptResult>();
 
-            PlayFabClientAPI.ExecuteCloudScript( request,
-                result => taskCompletionSource.SetResult( result ),
-                error => taskCompletionSource.SetException( new PlayFabException( error ) ) );
+            PlayFabClientAPI.ExecuteCloudScript(request,
+                result => taskCompletionSource.SetResult(result),
+                error => taskCompletionSource.SetException(new PlayFabException(error)));
 
             return taskCompletionSource.Task;
         }
 
         private string GetParameterString(Dictionary<string, string> functionParameter)
         {
-            if( functionParameter is Dictionary<string, string> dic )
-            {
-                var sb = new StringBuilder( dic.Count * 100 );
-                foreach (var kv in dic)
-                {
-                    sb.AppendLine( $"     {kv.Key} : {kv.Value}" );
-                }
+            if (functionParameter == null) return null;
 
-                return sb.ToString();
+            var sb = new StringBuilder(functionParameter.Count * 100);
+            foreach (var kv in functionParameter)
+            {
+                sb.AppendLine($"     {kv.Key} : {kv.Value}");
             }
 
-            return null;
+            return sb.ToString();
         }
     }
 }

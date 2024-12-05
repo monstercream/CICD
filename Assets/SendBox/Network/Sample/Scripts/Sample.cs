@@ -14,21 +14,25 @@ public class Sample : MonoBehaviour
         NetworkResult titleData = await network.TitleDataRequestAsync();
         NetworkResult userData = await network.UserDataRequestAsync();
 
-        if( login.IsSuccuces == false )
+        if( login.IsSuccess == false )
         {
-            Debug.LogWarning( $"Failed" );
+            Debug.LogWarning( $"login Failed" );
+            return;
         }
-        if( request.IsSuccuces == false )
+        if( request.IsSuccess == false )
         {
-            Debug.LogWarning( $"Failed" );
+            Debug.LogWarning( $"request Failed" );
+            return;
         }
-        if( titleData.IsSuccuces == false )
+        if( titleData.IsSuccess == false )
         {
-            Debug.LogWarning( $"Failed" );
+            Debug.LogWarning( $"titleData Failed" );
+            return;
         }
-        if( userData.IsSuccuces == false )
+        if( userData.IsSuccess == false )
         {
-            Debug.LogWarning( $"Failed" );
+            Debug.LogWarning( $"userData Failed" );
+            return;
         }
     }
 }
