@@ -9,19 +9,16 @@ on:
 jobs:
   test:
     name: Run Tests
-    runs-on: ubuntu-latest
-    container: unityci/editor:2022.3.7f1-linux-il2cpp-1
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
     steps:
-      # Docker 업그레이드
       - name: Upgrade Docker
         run: |
-          sudo apt-get update
-          sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-          sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-          sudo apt-get update
-          sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-          docker --version
+          docker version
+          docker buildx version
+        # Docker 명령어만 실행하여 버전 확인
       # Unity 라이센스 자동 활성화
       - name: Unity - Activate
         continue-on-error: true  # 활성화 실패해도 계속 진행
