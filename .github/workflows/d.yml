@@ -1,0 +1,7 @@
+
+      - name: Build & Upload Addressables
+        if: ${{ success() && inputs.ADDRESSABLES_OPTION != 'SKIP' }}
+        shell: pwsh
+        run: |
+          cd iv-build-coordinator
+          dotnet-script Main.csx --stage Addressables --buildconfig ${{ env.CONFIG_BASE64 }}
