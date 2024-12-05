@@ -25,6 +25,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+        
+      - uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: path/to/your/project
+          testMode: ${{ matrix.testMode }}
+          artifactsPath: ${{ matrix.testMode }}-artifacts
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create LicenseFile
         run: |
           echo "${{ secrets.UNITY_LICENSE }}" | base64 -d > Unity_v6.x.ulf
