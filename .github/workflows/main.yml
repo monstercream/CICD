@@ -43,35 +43,3 @@ jobs:
         with:
           name: Test results
           path: test-results
-
-  buildWindows:
-    needs: testRunner
-    name: Build for Windows
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Cache Library
-        uses: actions/cache@v3
-        with:
-          path: Library
-          key: Library-build-StandaloneWindows64
-          restore-keys: Library-build-
-
-      - name: Build project
-        uses: game-ci/unity-builder@v4
-        env:
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-        with:
-          projectPath: .
-          unityVersion: 2022.3.25f1
-          targetPlatform: StandaloneWindows64
-          allowDirtyBuild: true
-
-      - name: Upload build
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-StandaloneWindows64
-          path: build/StandaloneWindows64
