@@ -1,5 +1,4 @@
 name: Unity GameCI
-
 on:
   push:
     branches:
@@ -10,35 +9,13 @@ on:
       - main
       - develop
 
-env:
-  UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-  UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-  UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-
 jobs:
   testRunner:
     name: Test in Unity
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-        
-      - uses: game-ci/unity-test-runner@v4
-        env:
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-        with:
-          projectPath: path/to/your/project
-          testMode: ${{ matrix.testMode }}
-          artifactsPath: ${{ matrix.testMode }}-artifacts
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create LicenseFile
-        run: |
-          echo "${{ secrets.UNITY_LICENSE }}" | base64 -d > Unity_v6.x.ulf
 
       - name: Cache Library
         uses: actions/cache@v3
@@ -49,9 +26,14 @@ jobs:
 
       - name: Run tests
         uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          unityVersion: 6000.0.25f1
+          projectPath: .
+          unityVersion: 2022.3.25f1
           testMode: all
+          artifactsPath: test-results
           coverageOptions: 'generateAdditionalMetrics;generateHtmlReport;generateBadgeReport'
           githubToken: ${{ secrets.GITHUB_TOKEN }}
 
@@ -60,21 +42,15 @@ jobs:
         if: always()
         with:
           name: Test results
-          path: artifacts
+          path: test-results
 
   buildWindows:
     needs: testRunner
     name: Build for Windows
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Create LicenseFile
-        run: |
-          echo "${{ secrets.UNITY_LICENSE }}" | base64 -d > Unity_v6.x.ulf
 
       - name: Cache Library
         uses: actions/cache@v3
@@ -85,8 +61,12 @@ jobs:
 
       - name: Build project
         uses: game-ci/unity-builder@v4
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          unityVersion: 6000.0.25f1
+          projectPath: .
+          unityVersion: 2022.3.25f1
           targetPlatform: StandaloneWindows64
           allowDirtyBuild: true
 
