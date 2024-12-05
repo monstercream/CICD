@@ -15,6 +15,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+        
+      # Node.js 설정 추가
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'  # 더 안정적인 버전 사용
+
+
       - name: Cache Library
         uses: actions/cache@v3
         with:
