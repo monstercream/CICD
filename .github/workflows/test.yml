@@ -26,7 +26,7 @@ jobs:
       - name: Run CSX file
         run: |
           export PATH="$PATH:/root/.dotnet/tools"
-          dotnet script @Build/main.csx
+          dotnet script @Build/update_and_build.csx
         working-directory: ${{ github.workspace }}
 
       # 스크립트 실행 결과를 아티팩트로 저장 (선택사항)
