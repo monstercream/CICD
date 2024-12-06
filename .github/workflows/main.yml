@@ -30,12 +30,6 @@ jobs:
           restore-keys: |
             Library-
 
-      - name: Expose as artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: Manual Activation File
-          path: ${{ steps.getManualLicenseFile.outputs.filePath }}
-
       - name: Unity - Activate
         uses: game-ci/unity-activate@v2
         continue-on-error: false
