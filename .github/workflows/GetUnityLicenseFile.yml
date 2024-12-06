@@ -9,7 +9,7 @@ jobs:
       # Request manual activation file
       - name: Request manual activation file
         id: getManualLicenseFile
-        uses: game-ci/unity-request-manual-activation-file@v2
+        uses: GustavGame/unity-request-activation-file@main
         with:
           unityVersion: 2022.3.7f1
           
