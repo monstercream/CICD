@@ -1,8 +1,4 @@
-name: test
-
-env:
-  UNITY_VERSION: 2022.3.7f1
-  SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+name: Run .NET Script
 
 on:
   push:
@@ -11,19 +7,35 @@ on:
     branches: [main]
 
 jobs:
-  test:
-    name: Run Tests
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-      packages: write
+  run-script:
+    name: Run CSX Script
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Build & Upload Addressables
-        if: ${{ success() && inputs.ADDRESSABLES_OPTION != 'SKIP' }}
-        shell: pwsh
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.0.x'
+
+      - name: Install dotnet-script
+        run: dotnet tool install -g dotnet-script
+
+      - name: Run CSX file
         run: |
-          cd iv-build-coordinator
-          dotnet-script Main.csx --stage Addressables --buildconfig ${{ env.CONFIG_BASE64 }}
+          export PATH="$PATH:/root/.dotnet/tools"
+          dotnet script @Build/update_and_build.csx
+        working-directory: ${{ github.workspace }}
+
+      # 스크립트 실행 결과를 아티팩트로 저장 (선택사항)
+      - name: Upload script results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: script-results
+          path: |
+            @Build/output/**
+            @Build/logs/**
+          retention-days: 7
