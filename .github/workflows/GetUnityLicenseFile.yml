@@ -6,17 +6,23 @@ jobs:
     name: Request Unity activation file
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Unity - Request Activation File
-        uses: webbertakken/unity-request-manual-activation-file@v2
-        with:
-          unityVersion: 2022.3.7f1
+      # Unity 이미지를 사용하여 activation file 생성
+      - name: Create Unity activation file
+        run: |
+          docker run \
+            -e UNITY_VERSION=2022.3.7f1 \
+            -v ${{ github.workspace }}:/root/.local/share/unity3d/Unity \
+            unityci/editor:2022.3.7f1-linux-il2cpp-1 \
+            unity-editor \
+            -batchmode \
+            -nographics \
+            -logFile /dev/stdout \
+            -quit \
+            -createManualActivationFile
 
       - name: Upload activation file
         uses: actions/upload-artifact@v3
         with:
           name: Unity_v2022.3.7f1.alf
-          path: ${{ steps.getManualLicenseFile.outputs.filePath }}
+          path: Unity_v2022.3.7f1.alf
           retention-days: 1
