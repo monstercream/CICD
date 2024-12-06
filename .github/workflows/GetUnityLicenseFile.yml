@@ -1,19 +1,21 @@
-name: Get Unity License File
-on: workflow_dispatch
-
+name: Acquire activation file
+on:
+  workflow_dispatch: {}
 jobs:
-  get-license:
-    name: Get Unity License File
+  activation:
+    name: Request manual activation file
     runs-on: ubuntu-latest
     steps:
-      - name: Request Unity license file
+      # Request manual activation file
+      - name: Request manual activation file
         id: getManualLicenseFile
-        uses: game-ci/unity-request-activation-file@v2
+        uses: game-ci/unity-request-manual-activation-file@v2
         with:
           unityVersion: 2022.3.7f1
-
-      - name: Upload license file
+          
+      # Upload artifact (Unity_v2022.3.7f1.alf)
+      - name: Expose as artifact
         uses: actions/upload-artifact@v3
         with:
-          name: Manual Activation File
+          name: ${{ steps.getManualLicenseFile.outputs.filePath }}
           path: ${{ steps.getManualLicenseFile.outputs.filePath }}
