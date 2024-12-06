@@ -10,24 +10,20 @@ jobs:
         run: |
           docker run \
             -e UNITY_VERSION=2022.3.7f1 \
-            -v ${{ github.workspace }}:/Unity \
+            -v ${{ github.workspace }}:/github/workspace \
             unityci/editor:2022.3.7f1-linux-il2cpp-1 \
-            unity-editor \
+            bash -c \
+            'unity-editor \
             -batchmode \
             -nographics \
             -logFile /dev/stdout \
             -quit \
-            -createManualActivationFile
-          
-          # 파일 위치 확인
-          ls -la
-          find / -name "Unity_v2022.3.7f1.alf" 2>/dev/null || echo "File not found"
+            -createManualActivationFile && \
+            cp /Unity_v2022.3.7f1.alf /github/workspace/'
 
       - name: Upload activation file
         uses: actions/upload-artifact@v3
         with:
           name: Unity_Activation_File
-          path: | 
-            ./*.alf
-            Unity_*.alf
-          if-no-files-found: error
+          path: Unity_v2022.3.7f1.alf
+          retention-days: 1
