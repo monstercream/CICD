@@ -13,9 +13,9 @@ using System.Diagnostics;
 using System.Threading;
 using System.Runtime.InteropServices;
 
-string repoPath = "/Users/momac/Documents/Git/scg2";
-string unityProjectPath = "/Users/momac/Documents/Git/scg2";
-string unityPath = "/Applications/Unity/Hub/Editor/2022.1.0b6/Unity.app/Contents/MacOS/Unity";
+string repoPath = "/Users/infinitydevmon/CICD";
+string unityProjectPath = "/Users/infinitydevmon/CICD";
+string unityPath = "/Applications/Unity/Hub/Editor/2022.3.7f1/Unity.app/Contents/MacOS/Unity";
 string logFilePath = Path.Combine(unityProjectPath, "build_log.txt");
 string buildOutputPath = Path.Combine(unityProjectPath, "__BUILD");
 
